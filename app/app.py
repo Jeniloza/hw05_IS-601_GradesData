@@ -80,7 +80,7 @@ def form_delete_post(grade_id):
     return redirect("/", code=302)
 
 
-@app.route('/api/v1/grades', methods=['GET'])
+@app.route('/api/v1/grades/', methods=['GET'])
 def api_browse() -> str:
     cursor = mysql.get_db().cursor()
     cursor.execute('SELECT * FROM tblGrades')
@@ -95,25 +95,46 @@ def api_retrieve(grade_id) -> str:
     cursor = mysql.get_db().cursor()
     cursor.execute('SELECT * FROM tblGrades WHERE id=%s', grade_id)
     result = cursor.fetchall()
-    json_result = json.dumps(result);
+    json_result = json.dumps(result)
     resp = Response(json_result, status=200, mimetype='application/json')
     return resp
 
 
 @app.route('/api/v1/grades/', methods=['POST'])
 def api_add() -> str:
+    content = request.json
+    cursor = mysql.get_db().cursor()
+    inputData = (content['Last_Name'], content['First_Name'], content['SSN'],
+                 content['Test1'], content['Test2'], content['Test3'],
+                 content['Test4'], content['Final'], content['Grade'])
+    sql_insert_query = """INSERT INTO tblGrades(Last_Name,First_Name,SSN,Test1,Test2,Test3,Test4,Final,Grade) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """
+    cursor.execute(sql_insert_query, inputData)
+    mysql.get_db().commit()
     resp = Response(status=201, mimetype='application/json')
     return resp
 
 
 @app.route('/api/v1/grades/<grade_id>', methods=['PUT'])
 def api_edit(grade_id) -> str:
-    resp = Response(status=201, mimetype='application/json')
+    content = request.json
+    cursor = mysql.get_db().cursor()
+    inputData = (content['Last_Name'], content['First_Name'], content['SSN'],
+                 content['Test1'], content['Test2'], content['Test3'],
+                 content['Test4'], content['Final'], content['Grade'], grade_id)
+    sql_update_query = """UPDATE tblGrades t SET t.Last_Name = %s, t.First_Name = %s, t.SSN = %s, t.Test1 = 
+        %s, t.Test2 = %s, t.Test3 = %s, t.Test4 = %s, t.Final = %s, t.Grade = %s WHERE t.id = %s """
+    cursor.execute(sql_update_query, inputData)
+    mysql.get_db().commit()
+    resp = Response(status=200, mimetype='application/json')
     return resp
 
 
-@app.route('/api/grades/<grade_id>', methods=['DELETE'])
+@app.route('/api/v1/grades/<grade_id>', methods=['DELETE'])
 def api_delete(grade_id) -> str:
+    cursor = mysql.get_db().cursor()
+    sql_delete_query = """DELETE FROM tblGrades WHERE id = %s """
+    cursor.execute(sql_delete_query, grade_id)
+    mysql.get_db().commit()
     resp = Response(status=210, mimetype='application/json')
     return resp
 
